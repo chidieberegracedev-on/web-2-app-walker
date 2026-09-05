@@ -86,6 +86,8 @@ The 40-page / depth-3 / 15s-per-page / 5-minute defaults are defined once, in `S
 
 ## 6. What This Stage Deliberately Does Not Do
 
+> **⚠ SUPERSEDED IN PART — read with Decision 022.** The final bullet below described this pipeline when AI executed as a module inside the Backend API on Vercel. Per **Decision 022**, AI execution now lives in Walker alongside this deterministic pipeline, so the deterministic stage hands its `DiscoveryResult` to Walker's own AI execution layer in-process rather than stopping at a service boundary. **The separation this section exists to protect still holds in full:** the deterministic stage still establishes facts without AI, AI still never invents a fact this pipeline did not produce (`AI_AGENT_SPEC.md` §1–§2), page classification remains internal machinery rather than a recommendation, and neither stage writes the Blueprint — Walker submits discovery data, classifications and recommendations to Beagle through the frozen Worker API, and Beagle validates and persists them (Decision 016). What changed is the process boundary, not the ordering or the discipline.
+
 - Does not decide what a page *means* (that's `AI_AGENT_SPEC.md` §7's page classification, built on top of these raw indicators)
 - Does not decide a site's overall category (§8 there)
 - Does not rank or select a logo/icon candidate (§7 there) — it only surfaces the candidates

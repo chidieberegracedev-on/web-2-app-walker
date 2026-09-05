@@ -1,6 +1,10 @@
 # AI Agent Specification
 
-Governed by Decision 004 (structured-output only), Decision 016 (AI Recommendation Boundary), Decision 018 (AI as a Backend module, not a separate service). Covers the AI Analysis Module referenced in `/architecture/SYSTEM_ARCHITECTURE.md` §2–3. The deterministic crawl/extract pipeline that feeds this module is specified separately in `/ai/DETECTION_PIPELINE.md` — this document starts where that one ends: a structured `DiscoveryResult` arriving at the AI layer.
+Governed by Decision 004 (structured-output only), Decision 016 (AI Recommendation Boundary), Decision 018 (service-boundary discipline), and **Decision 022 (AI execution relocated to the Walker Discovery Worker)**.
+
+> **⚠ EXECUTION LOCATION SUPERSEDED — read with Decision 022.** This spec was written when AI ran as a module inside the Backend API on Vercel. Per Decision 022, AI now *executes* on the Walker Discovery Worker (Railway): model calls, prompt construction, retry/fallback execution, internal page classification, and recommendation generation all run in Walker. **Everything in this document about *how* the AI must behave remains fully in force** — structured output, per-field confidence, deterministic-first prompting (§2), prompt-injection resistance (§10), the supersede rule (§4), confidence tiers (§6), `source ∈ {ai, deterministicFallback}`, and validation-before-Blueprint. Only the *location* changed: read "the AI Analysis Module inside the Backend API" as "the AI execution layer inside Walker," and read "returns structured output to the Backend API" as "submits validated recommendations to Beagle via the frozen Worker API." Beagle still validates and persists everything and is still the only writer of Blueprint content (Decision 016).
+
+Covers the AI execution layer (now in Walker per Decision 022). The deterministic crawl/extract pipeline that feeds it is specified in `/ai/DETECTION_PIPELINE.md` — this document starts where that one ends: a structured `DiscoveryResult` arriving at the AI layer.
 
 ## 1. Critical Principle
 
@@ -74,8 +78,14 @@ AIRecommendation {
   recommendationId: string
   projectId: string
   discoveryResultId: string
-  type: string              — e.g. "navigationItem" | "themePreset" | "nativeScreen" |
-                               "homepageSelection" | "pageClassification" | "assetSelection"
+  type: string              — CLOSED enum, frozen V1 user-facing set (Decision 016 rework):
+                               "navigationItem" | "homepageSelection" | "themePreset" |
+                               "nativeScreen" | "assetSelection"
+                               // NOTE: page classification is INTERNAL machinery, NOT a
+                               // recommendation type — it populates pages[].detectedType /
+                               // detectionConfidence and is never an ai_recommendations row.
+                               // (This corrects the earlier draft that listed pageClassification
+                               // here. See WALKER_BEAGLE_INTEGRATION_CONTRACT §6.)
   target: string             — what this recommendation is about: a page id, a
                                Blueprint field path, or a route id
   recommendation: object     — the suggested value, shaped to match the target

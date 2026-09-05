@@ -2,6 +2,8 @@
 
 **Status: v1.0 — locked.** Governed by `/decisions/TECHNICAL_DECISIONS.md`. This document answers: how should this actually be engineered?
 
+> **⚠ SUPERSEDED IN PART — read with Decisions 022 and 023.** This document was written when AI Analysis ran as a module inside the Backend API on Vercel. Per **Decision 022**, AI execution (model calls, prompts, page classification, recommendation generation) has moved to the Walker Discovery Worker on Railway; Beagle now validates and persists what Walker submits but makes no model call. Wherever this document says "AI Analysis Module" inside the Backend API, or the §4 rule "Discovery ≠ AI — Discovery never calls the AI Analysis Module directly," read it in light of Decision 022: discovery and AI execution now deliberately live together in Walker, and the boundary that rule protected (AI never writes the Blueprint directly) is preserved by Decision 016 and Walker's use of the validated Worker API. Also, the job-status set in §5 is superseded by **Decision 023**: the canonical set is `queued | running | succeeded | failed | cancelling | cancelled`. The prose below is preserved as written; these two decisions are the current reality where they differ.
+
 ## 1. Component Map
 
 **Four runtime components** — Builder App, Backend API, Discovery Worker, Build Worker — with Supabase providing the managed persistence, auth, and realtime layer that all of them read and write through. Supabase is not counted as a fifth deployable component; it's the shared managed layer underneath the four.
@@ -119,7 +121,7 @@ Discovery, AI analysis, and builds are all long-running relative to a mobile req
 ```
 Job {
   id, type (discovery | ai_analysis | build),
-  project_id, status (queued | running | succeeded | failed),
+  project_id, status (queued | running | succeeded | failed | cancelling | cancelled),  // Decision 023
   progress_step (human-readable, matches Screen 2 / Screen 14 copy),
   result_ref (nullable),
   error (nullable, human-readable — never a raw stack trace)

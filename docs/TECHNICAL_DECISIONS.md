@@ -83,9 +83,47 @@ The Runtime Template (Decision 020) is **one generic Kotlin/Compose codebase** �
 
 The essential configuration and required assets are bundled into each generated application at build time. **The generated app must not require the platform's backend merely to start or render its core experience** — it is a self-contained Android app once built, whose only genuine runtime network dependency is the customer's own website (loaded via WebView — the entire point of the product). Optional remote configuration (updating a project's behavior without a full rebuild) may be considered later but is explicitly out of scope for V1 — building that dependency in now would undermine the reliability property this decision exists to guarantee.
 
+### Decision 022 — AI Processing Ownership (supersedes the AI-execution-location portion of Decision 018)
+During implementation, AI execution moved out of the Beagle (Vercel) backend and onto the Discovery Worker ("Walker", Railway). This decision records that relocation formally so the decision record matches the deployed reality.
+
+**Walker owns AI execution:**
+- Model-provider (OpenAI) calls
+- Prompt construction and structured AI processing
+- AI retry and deterministic-fallback *execution*
+- Internal page classification
+- Generation of the granular AI recommendations (the frozen five types)
+
+**Beagle remains the system of record and the API/contract authority:**
+- Validates every AI output Walker submits, against the recommendation contract
+- Owns recommendation persistence and lifecycle (accept/reject/modify, supersession)
+- Owns Blueprint construction, validation, and persistence — Beagle is still the only writer of Blueprint content (Decision 016 unchanged)
+- Makes no model-provider call on any request path
+
+**Boundary:** Walker never accesses Postgres, Supabase Storage, or Beagle's database directly. It communicates with Beagle solely through the frozen Worker API (`WALKER_BEAGLE_INTEGRATION_CONTRACT.md`).
+
+**What this supersedes, and what it does NOT:** This decision supersedes *only the AI execution-location* portion of Decision 018 (and the corresponding "AI Analysis Module inside the Backend API on Vercel" language in `SYSTEM_ARCHITECTURE.md` §1–2, `AI_AGENT_SPEC.md` §3, `DETECTION_PIPELINE.md` §6). Decision 018's service-boundary *discipline* otherwise stands. Critically, all the AI *quality* requirements remain fully in force and are not weakened by moving where the code runs: structured-output-only (Decision 004), schema validation before anything affects the Blueprint, per-field confidence, deterministic-first prompting (`AI_AGENT_SPEC.md` §2), prompt-injection resistance / instruction-data separation (§10), the supersede rule (§4), confidence tiers (§6), and `source ∈ {ai, deterministicFallback}`. The AI Agent Spec remains the authority on *how* AI must behave; this decision only relocates *where* it executes. Decision 018 is preserved above, not deleted — this is an explicit supersession of one clause, not a rewrite of history. The must-not-couple rule in `SYSTEM_ARCHITECTURE.md` §4 ("Discovery ≠ AI — Discovery never calls the AI Analysis Module directly") is now moot in its original form, since discovery and AI execution deliberately live in the same worker; the boundary it protected (AI never writes the Blueprint directly) is preserved by Decision 016 and by Walker submitting recommendations through the validated Worker API rather than writing them itself.
+
+### Decision 023 — Jobs Status Vocabulary
+The canonical `jobs.status` value set is exactly:
+
+```
+queued | running | succeeded | failed | cancelling | cancelled
+```
+
+This is the set enforced by the live database CHECK constraint and the Worker API contract. It reconciles an earlier inconsistency: `SYSTEM_ARCHITECTURE.md` §5 originally listed four states (`queued | running | succeeded | failed`), while `BUILD_ARCHITECTURE.md` §8 required a build job to pass through `cancelling` and resolve to `cancelled`. The later requirement extended the earlier set rather than contradicting it; this decision records the union as canonical for the `jobs` table.
+
+**Transitions and rules (per the deployed implementation and Worker API contract):**
+- `queued → running` via job claim (claim only succeeds while status is `queued`, so concurrent workers produce exactly one winner).
+- `running → succeeded` via the single completed-result submission; `running → failed` via failure report.
+- `cancelling → cancelled` — user-initiated cancellation; the worker stops at its next checkpoint and the job resolves to `cancelled`.
+- **Terminal states (`succeeded`, `failed`, `cancelled`) are immutable** — a late submission cannot overwrite a resolved job.
+- **Idempotency:** the result submission flips `running → succeeded` before writing any dependent rows, so a retried submission finds no `running` job, receives `409`, and persists nothing twice.
+
+Note on scope: `build_manifests.status` uses the documented five-value set (`queued | running | succeeded | failed | cancelled`) without a separate `cancelling` step; `jobs.status` carries all six. The two are intentionally distinct and both are correct — see `BUILD_ARCHITECTURE.md` §5/§8.
+
 ---
 
-## Infrastructure mapping (how the stack maps to Decisions 001–020)
+## Infrastructure mapping (how the stack maps to Decisions 001–023)
 
 | Decision | Component | Where it runs |
 |---|---|---|
@@ -94,7 +132,7 @@ The essential configuration and required assets are bundled into each generated 
 | 002 | Discovery Worker | Node/Playwright process — **Railway** (persistent process; not Vercel serverless, which has execution-time limits unsuited to headless browser rendering) |
 | 003, 014 | Blueprint storage, Projects | **Supabase** (Postgres + auth + realtime) |
 | 003, 016 | AIRecommendation records | **Supabase** (Postgres), written only by the Backend API |
-| 004, 018 | AI Analysis Module | **Vercel** — a module inside the Backend API, not a separately deployed service; calls a model provider with structured output, short-lived enough to fit Vercel's execution limits |
+| 004, 018, **022** | AI execution (model calls, prompts, classification, recommendation generation) | **Railway (Walker / Discovery Worker)** — relocated from Vercel per Decision 022. Beagle validates and persists what Walker submits but makes no model call. |
 | 010, 017 | Build Worker + Build Manifest | Build Worker: dedicated build environment (candidate: **Railway** or a container-based CI runner) with Android SDK/Gradle, signing keys never exposed to the client. Build Manifest: generated by the Backend API on **Vercel**, stored in **Supabase** alongside the build job record — not embedded in the Blueprint |
 | 007, 015 | Assets (icons, logos, splash) | **Supabase Storage** for files, Postgres for metadata; Blueprint references by managed asset ID, never a raw external URL |
 | — | Lightweight API routes / edge functions | **Vercel** |

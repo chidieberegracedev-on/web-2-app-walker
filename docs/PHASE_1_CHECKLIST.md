@@ -18,7 +18,8 @@ Concrete, checkable items against `/phases/PHASE_1.md`'s Definition of Done. Cat
 - [ ] OAuth/identity-provider domains correctly detected and seeded into `externalAuthDomains` with a default `handoffStrategy`
 
 ## AI Recommendations (backend/infra)
-- [ ] Every recommendation type in `AI_AGENT_SPEC.md` §7 produces a schema-valid `AIRecommendation` for a representative real site
+- [ ] Each of the frozen five recommendation types (`navigationItem`, `homepageSelection`, `themePreset`, `nativeScreen`, `assetSelection` — `AI_AGENT_SPEC.md` §4, `WALKER_BEAGLE_INTEGRATION_CONTRACT.md` §6) produces a schema-valid recommendation for a representative real site
+- [ ] Internal page classification populates `pages[].detectedType`/`detectionConfidence` through the result submission and never appears as an `ai_recommendations` row — it is internal machinery, not a recommendation type, and is not part of accept/reject/modify
 - [ ] Malformed/schema-invalid AI response triggers the retry-once-then-fallback behavior (`AI_AGENT_SPEC.md` §11), verified by forcing a malformed response in a test environment
 - [ ] Low-confidence recommendation correctly falls back to deterministic default or "ask the user" rather than being presented as if confident
 - [ ] Two recommendations targeting the same field correctly supersede (older auto-rejected with the specified reason), never both shown as active

@@ -2,6 +2,8 @@
 
 Governed by 00_PRODUCT_HANDOFF.md §30, Decision 002 (discovery), Decision 010/011 (build/editor excluded from this phase), Decision 019–021 (ownership boundary, Runtime Template model). Assembles definitions already established elsewhere rather than introducing new scope.
 
+> **⚠ SUPERSEDED IN PART — read with Decision 022.** "What Backend/Infrastructure Builds" below assigns the AI Analysis Module to the Backend API (Vercel). Per **Decision 022**, AI execution — model calls, prompt construction, retry and deterministic-fallback execution, internal page classification, and generation of the frozen five recommendation types — is built and runs in the **Walker Discovery Worker (Railway)**. Beagle validates what Walker submits, owns recommendation persistence and lifecycle, and constructs and persists the Blueprint; it makes no model call. Phase 1's scope, deliverables and Definition of Done are otherwise unchanged — the same work is still Phase 1 work, on the other side of the Vercel/Railway line.
+
 ## Goal
 
 Prove the platform can understand a website and produce a coherent, editable application Blueprint with a basic but accurate preview — before any commitment to a compiled build or a full editing experience.
