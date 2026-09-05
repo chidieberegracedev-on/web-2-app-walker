@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+
+# Never commit real secrets. Only .env.example (names, no values) is tracked.
+.env
+.env.*
+!.env.example
+
+# Test/coverage artifacts
+coverage/
+.vitest/

@@ -1,0 +1,25 @@
+{
+  "name": "web-2-app-walker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Walker — Discovery Worker (Railway) for the website-to-app builder. W1: authenticated contact with deployed Beagle.",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node scripts/beagle-auth-smoke.mjs"
+  },
+  "dependencies": {
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
+}
