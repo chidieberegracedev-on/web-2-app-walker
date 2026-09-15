@@ -8,6 +8,7 @@
     "node": ">=22 <23"
   },
   "scripts": {
+    "start": "node dist/main.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run",
