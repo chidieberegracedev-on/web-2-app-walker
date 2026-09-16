@@ -2,7 +2,7 @@
   "name": "web-2-app-walker",
   "version": "0.1.0",
   "private": true,
-  "description": "Walker — Discovery Worker (Railway) for the website-to-app builder. W1: authenticated contact with deployed Beagle.",
+  "description": "Walker \u2014 Discovery Worker (Railway) for the website-to-app builder. W1: authenticated contact with deployed Beagle.",
   "type": "module",
   "engines": {
     "node": ">=22 <23"
@@ -16,6 +16,7 @@
     "smoke": "node scripts/beagle-auth-smoke.mjs"
   },
   "dependencies": {
+    "playwright": "1.55.0",
     "zod": "3.23.8"
   },
   "devDependencies": {

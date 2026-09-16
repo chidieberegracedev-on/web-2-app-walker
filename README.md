@@ -32,16 +32,67 @@ Not in W1 (later phases): Playwright/crawl, extraction, AI, asset fetching,
 `/result` submission, cancellation, progress reporting, stuck-job recovery, and
 production job acquisition/dispatch. See the implementation plan.
 
+## Status: Phase W2 — DiscoveryEngine (crawl + extract)
+
+W2 delivers the crawl/extract/analyze engine as a **pure function behind an
+injected input**, so production intake (Beagle pull/claim — "G1") can be attached
+later without touching the engine:
+
+```
+DiscoveryEngine.run(input: DiscoveryJobInput { jobId, rootUrl, limits }) -> DiscoveryResult
+```
+
+- Playwright browser lifecycle (`src/discovery/browser.ts`) — headless chromium,
+  container-safe args, `executablePath` override.
+- Same-origin BFS crawl (`src/discovery/crawler.ts`) — deterministic ordering,
+  depth handling, and **all limits read from the injected `JobContext.limits`**
+  (maxPages, maxDepth, per-page timeout, total timeout), never hardcoded.
+- URL normalization/dedup + baseline scoping (`src/discovery/url.ts`) — https +
+  same-registrable-domain at crawl time (full §5 SSRF hardening is W4, at
+  asset-fetch).
+- Extraction (`src/discovery/dom-extract.ts`, `extract.ts`) — title, headings,
+  HTTP status, redirect chain, depth, internal/external links, forms + field
+  types, metadata, visual characteristics; asset candidates (favicon / manifest
+  icons / apple-touch / OG) **surfaced, not fetched** (bytes are W4).
+- Deterministic indicators (`src/discovery/indicators.ts`) — auth, OAuth domains,
+  ecommerce, search, account system, mobile-responsive, repeated navigation.
+- Cooperative cancellation **checkpoint hook only** — not wired to any real
+  signal (G5 is unbuilt on Beagle's side).
+
+**Page identity:** discovered pages carry **no `id`**. Beagle derives
+`page-{1-based index}` from `pages[]` position; the engine guarantees one
+deterministic ordering and exposes `positionalPageId(index)` so Walker-side code
+(W3) derives the same `page-N`.
+
+**Engine ↔ adapter boundary (deliberate):** the engine produces the internal
+`DiscoveryResult` model (`src/discovery/model.ts`), shaped using
+`docs/DETECTION_PIPELINE.md §4` as guidance — **not** Beagle's frozen wire schema
+(still being finalized; `crawlSummary.limits` naming/units unresolved). A future
+Beagle **result adapter** (W5) maps this model onto whatever Beagle publishes; a
+future **intake adapter** (post-G1) supplies `rootUrl`. Neither exists yet.
+
+Not in W2: production intake / `claim-next` / `/start`; AI (W3); asset byte
+fetching (W4); result submission (W5); cancellation/progress/stuck-job wiring.
+
 ## Requirements
 
 - Node.js 22 (`.nvmrc`), npm.
+- A chromium browser for discovery (W2). Locally: `npx playwright install chromium`
+  (or, on a pre-provisioned image, set `WALKER_CHROMIUM_EXECUTABLE_PATH` to the
+  browser binary — the tests auto-discover one under `PLAYWRIGHT_BROWSERS_PATH`).
+  On Railway the browser + system deps come from the `Dockerfile`
+  (`playwright install --with-deps chromium`).
 
 ```bash
 npm install
 npm run typecheck   # strict tsc over src + test
-npm test            # vitest — offline conformance suite
+npm test            # vitest — offline unit + loopback-fixture render tests
 npm run build       # emit dist/ (tsc)
 ```
+
+The discovery render tests use a **loopback fixture site** (no external egress).
+They skip automatically if no chromium can be resolved. Real-site discovery, like
+the W1 live smoke, must run where outbound network is permitted.
 
 ## Offline test suite
 
