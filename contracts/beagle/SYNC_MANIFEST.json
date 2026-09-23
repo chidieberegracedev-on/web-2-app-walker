@@ -1,0 +1,46 @@
+{
+  "$comment": "Canonical record of the Beagle contract snapshot Walker is built against, and the drift baseline. On any future AUTHORIZED re-sync, recompute each Beagle source artifact's SHA-256 and compare to `sha256` below: a changed checksum means the contract changed -> re-sync -> re-record SHA -> re-run contract tests -> adjust implementation if needed. This manifest is also how a re-sync knows exactly which files to pull and from where (note the integration contract's source path is one level up from the other three).",
+  "beagle": {
+    "repository": "https://github.com/chidieberegracedev-on/web-2-app-backend-api-",
+    "branch": "main",
+    "commit": "90eea48c4b287ad6145557e543f79387a027df3b",
+    "commitShort": "90eea48",
+    "authority": "Beagle is the canonical contract authority. These copies are read-only consumption artifacts, not an independent source of truth. Walker never edits, commits, branches, or pushes to Beagle, and never edits these local copies to resolve a disagreement — discrepancies are reported to Beagle to fix at the authority."
+  },
+  "syncedAt": "2026-09-23",
+  "syncedIntoBranch": "claude/walker-docs-review-xngw55",
+  "artifacts": [
+    {
+      "name": "WALKER_BEAGLE_INTEGRATION_CONTRACT.md",
+      "beagleCommit": "90eea48c4b287ad6145557e543f79387a027df3b",
+      "sourcePath": "doc/backend/WALKER_BEAGLE_INTEGRATION_CONTRACT.md",
+      "destPath": "contracts/beagle/WALKER_BEAGLE_INTEGRATION_CONTRACT.md",
+      "bytes": 27079,
+      "sha256": "57ee2044cd9fb6f95b2e9a42085aa308a430da9b71b87a8796c4cced3d112f8a"
+    },
+    {
+      "name": "discovery-result.v1.0.0.schema.json",
+      "beagleCommit": "90eea48c4b287ad6145557e543f79387a027df3b",
+      "sourcePath": "doc/backend/contracts/discovery-result.v1.0.0.schema.json",
+      "destPath": "contracts/beagle/discovery-result.v1.0.0.schema.json",
+      "bytes": 4710,
+      "sha256": "c4320650b048f1a317ec2a7cf8009d5ce3016dc6c95c14be362960d1279e28b2"
+    },
+    {
+      "name": "recommendation-payloads.v1.0.0.schema.json",
+      "beagleCommit": "90eea48c4b287ad6145557e543f79387a027df3b",
+      "sourcePath": "doc/backend/contracts/recommendation-payloads.v1.0.0.schema.json",
+      "destPath": "contracts/beagle/recommendation-payloads.v1.0.0.schema.json",
+      "bytes": 9100,
+      "sha256": "0068fc73b8a4278c6c9a4ec533b12281c77f9236d38c8545cb706be51fa1ab7e"
+    },
+    {
+      "name": "WALKER_CONTRACT_GAPS.md",
+      "beagleCommit": "90eea48c4b287ad6145557e543f79387a027df3b",
+      "sourcePath": "doc/backend/contracts/WALKER_CONTRACT_GAPS.md",
+      "destPath": "contracts/beagle/WALKER_CONTRACT_GAPS.md",
+      "bytes": 9231,
+      "sha256": "f3a50c0b43f218af9044df24cb027266a5e6f9acc7e654543eb08ac6aa88a5f1"
+    }
+  ]
+}

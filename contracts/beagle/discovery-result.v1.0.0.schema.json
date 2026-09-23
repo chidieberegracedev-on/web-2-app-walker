@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://web-2-app-backend-api.vercel.app/contracts/discovery-result/v1.0.0",
+  "title": "Beagle DiscoveryResult wire contract",
+  "description": "The exact shape Beagle validates as `discoveryResult` in POST /api/worker/jobs/{jobId}/result. Generated from lib/discovery/schema.ts — do not hand-edit.",
+  "version": "1.0.0",
+  "frozen": true,
+  "type": "object",
+  "properties": {
+    "rootUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "crawlSummary": {
+      "type": "object",
+      "properties": {
+        "totalUrlsChecked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "totalPagesSaved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limitsHit": {
+          "type": "object",
+          "properties": {
+            "maxPages": {
+              "type": "boolean"
+            },
+            "maxDepth": {
+              "type": "boolean"
+            },
+            "timeout": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "required": [
+        "totalUrlsChecked",
+        "totalPagesSaved",
+        "durationMs"
+      ]
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "path": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url",
+                "type"
+              ]
+            }
+          },
+          "detectedType": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "path"
+        ]
+      }
+    },
+    "siteIndicators": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "rootUrl",
+    "crawlSummary",
+    "pages",
+    "siteIndicators"
+  ],
+  "x-beagle-authoritative-limits": {
+    "description": "Returned with every claim. MILLISECONDS — the field names are authoritative. SYSTEM_ARCHITECTURE.md / DETECTION_PIPELINE.md describe the same durations in prose as perPageTimeoutSeconds (15 s) and jobTimeoutSeconds (300 s); identical values, different naming.",
+    "maxPages": 40,
+    "maxDepth": 3,
+    "pageTimeoutMs": 15000,
+    "totalTimeoutMs": 300000
+  },
+  "x-beagle-validation-note": "URL fields emit `format: \"uri\"`. JSON Schema treats `format` as ANNOTATION-ONLY by default, so a validator with format assertion disabled will accept strings Beagle rejects (e.g. \"not-a-url\"). Consumers MUST enable format assertion — with ajv, `addFormats(ajv)` — or this artifact validates strictly weaker than the server.",
+  "x-beagle-additional-rules": [
+    "pages[] carries NO id field. Beagle mints identity as `page-{N}`, N = 1-based index into this array. pageClassifications[].pageId and navigationItem/homepageSelection targets must use those ordinals.",
+    "Only the first 40 pages are used (MAX_PAGES). There is no schema-level cap, so a longer array is accepted but everything past index 40 is dropped and cannot be referenced.",
+    "pages[].assets[].type is an UNCONSTRAINED string here — not the four-value sourceType enum used at asset upload (favicon|manifest|appleTouchIcon|openGraph).",
+    "siteIndicators is an open record (string -> any). Beagle reads boolean flags such as hasEcommerce, hasShopify, hasAuthentication, hasAccountSystem, hasBlog; unknown keys are ignored and absent flags are treated as false.",
+    "links[] are resolved against rootUrl and matched by pathname to build the inbound-link graph; only links whose pathname matches a submitted page path are counted.",
+    "crawlSummary.durationMs is milliseconds. crawlSummary.limitsHit.timeout drives crawlComplete."
+  ]
+}
