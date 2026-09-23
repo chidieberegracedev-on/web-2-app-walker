@@ -8,8 +8,12 @@ directly and never builds a Blueprint — Beagle owns all of that.
 
 Full context is in [`docs/`](./docs). Start with
 [`WALKER_PROJECT_HANDOFF.md`](./docs/WALKER_PROJECT_HANDOFF.md), then the frozen
-[`WALKER_BEAGLE_INTEGRATION_CONTRACT.md`](./docs/WALKER_BEAGLE_INTEGRATION_CONTRACT.md),
-the [`WALKER_IMPLEMENTATION_PLAN.md`](./docs/WALKER_IMPLEMENTATION_PLAN.md)
+integration contract — a read-only Beagle snapshot pinned in
+[`contracts/beagle/`](./contracts/beagle) (see
+[`WALKER_BEAGLE_INTEGRATION_CONTRACT.md`](./contracts/beagle/WALKER_BEAGLE_INTEGRATION_CONTRACT.md)
+and [`SYNC_MANIFEST.json`](./contracts/beagle/SYNC_MANIFEST.json) for the pinned
+commit and checksums) — then the
+[`WALKER_IMPLEMENTATION_PLAN.md`](./docs/WALKER_IMPLEMENTATION_PLAN.md)
 (phases W1–W6), and [`WALKER_CLAUDE_CODE_RULES.md`](./docs/WALKER_CLAUDE_CODE_RULES.md).
 
 ## Status: Phase W1 — authenticated contact with Beagle
